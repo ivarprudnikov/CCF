@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the Apache 2.0 License.
 """
-Experiment only: summarises results/{main,1b}[_r2]_priv_1k_<size>.json, written
-by run_matrix.sh, as the Markdown tables in SNAPSHOT_GENERATION_MEMORY_TEST.md.
+Experiment only: summarises results/{main,1b}[_r2]_priv_<tag>_<size>.json,
+written by run_matrix.sh, as the Markdown tables in
+SNAPSHOT_GENERATION_MEMORY_TEST.md. <tag> is the first argument: 1k (default)
+for 1 KiB values, 1m for 1 MiB values.
 """
 
 import json
@@ -13,8 +15,11 @@ SIZES = ["64m", "128m", "256m", "512m", "1g", "2g"]
 RESULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 
 
+TAG = sys.argv[1] if len(sys.argv) > 1 else "1k"
+
+
 def load(build, size, rep=""):
-    path = os.path.join(RESULTS, f"{build}{rep}_priv_1k_{size}.json")
+    path = os.path.join(RESULTS, f"{build}{rep}_priv_{TAG}_{size}.json")
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
@@ -77,7 +82,7 @@ def main():
                 a = r1["primary_snapshot_generation"][key]
                 c = r2["primary_snapshot_generation"][key]
                 diff = abs(a - c) / a * 100
-                if diff > worst.get((build, key), (0, None))[0]:
+                if diff >= worst.get((build, key), (0, None))[0]:
                     worst[(build, key)] = (diff, size)
     for (build, key), (diff, size) in sorted(worst.items()):
         print(f"Repeat pass: largest difference in {build} {key}: {diff:.1f}% ({size})")
